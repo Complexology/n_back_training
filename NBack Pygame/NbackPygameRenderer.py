@@ -4,7 +4,7 @@ CANVAS_WIDTH = 500
 CANVAS_HEIGHT = 700
 TEXT_H1_SIZE=30
 TEXT_H1_STYLE='Arial'
-TEXT_L_SIZE=80
+TEXT_L_SIZE=120
 TEXT_L_STYLE='Arial'
 TEXT_B1_SIZE=80
 TEXT_B1_STYLE='Arial'
@@ -27,7 +27,8 @@ def canvas_setup():
 
 def draw_rectangle(upper_x, upper_y, lower_x, lower_y, color):
     # Draw a rectangle on the screen
-    pygame.draw.rect(screen, color, (upper_x, upper_y, lower_x - upper_x, lower_y - upper_y))
+    rectangle=pygame.draw.rect(screen, color, (upper_x, upper_y, lower_x - upper_x, lower_y - upper_y))
+    return rectangle
 
 def draw_circle(upper_x, upper_y, lower_x, lower_y, color):
     # Draw a circle on the screen
@@ -58,6 +59,22 @@ def create_text(x, y, words, type):
     screen.blit(text_surface, (x, y))
     return text_surface
 
+def create_centered_text(words, type,container,axis):
+    font_to_use = get_font(type)
+    text_surface = font_to_use.render(words, True, BLACK)
+    text_rect=text_surface.get_rect()
+    if container is None:
+        text_rect.centerx = screen.get_rect().centerx
+        screen.blit(text_surface, text_rect)
+    else:
+        if axis=="Y":
+            text_rect.center = container.center
+            screen.blit(text_surface, text_rect)
+        if axis=="X":
+            text_rect.centerx = container.centerx
+            screen.blit(text_surface, text_rect)
+    return text_surface
+
 def get_width(object):
     # Get the width of the object
     return object.rect.width
@@ -77,18 +94,20 @@ def get_text_height(text):
 def get_font(type):
     # Get the font for the specified type
     if type == 'header':
-        return pygame.font.SysFont("Arial", 30)
+        return pygame.font.SysFont(TEXT_H1_STYLE, TEXT_H1_SIZE)
     elif type == 'letter':
-        return pygame.font.SysFont("Arial", 80)
+        return pygame.font.SysFont(TEXT_L_STYLE, TEXT_L_SIZE)
     elif type == 'button':
-        return pygame.font.SysFont("Arial", 80)
+        return pygame.font.SysFont(TEXT_B1_STYLE, TEXT_B1_SIZE)
     else:
         return pygame.font.SysFont("Arial", 30)
     
 def set_text_to_center(object, container):
     # Set the text to the center of the container
-    object_rect = object.get_rect(center=screen.get_rect().center)
-    screen.blit(object, object_rect)
+    if container is None:
+        object_rect = object.get_rect(center=screen.get_rect().center)
+        screen.blit(object, object_rect)
+    
     
     #object_rect = object.get_rect()
     #if container is None:

@@ -26,9 +26,13 @@ CANVAS_SIDE_PADDING=10
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+NBACK_NUMBER=1
+
 render.initialize_pygame()
 screen=render.canvas_setup()
 running=True
+past_letters=[]
+past_index=[]
 #start_button = render.Button(100, 100, 200, 50, (100, 100, 100), "Click me!", 30)
 
 def main():
@@ -46,9 +50,9 @@ def main():
         screen.fill(WHITE)
 
         # Draw your GUI elements here
-        Header=render.create_text(0,100,"N-Back Trainer","Header")
-        render.set_text_to_center(Header,None)
+        Header=render.create_centered_text("N-Back Trainer","header",None,"X")
         boxes=create_grid()
+        Letter=render.create_centered_text(get_random_letter()[0],"letter",boxes[get_random_index()[0]],"Y")
         #start_button.draw(screen)
 
 
@@ -68,7 +72,7 @@ def main():
         pygame.display.flip()
 
         # Cap the frame rate
-        clock.tick(60)
+        clock.tick(1)
 
     #render.bind_mouse()
     #render.bind_func_to_window_close(set_running_false)
@@ -122,7 +126,7 @@ def create_grid():
     boxes=[]
     for x_coord in x_coords:
         for y_coord in y_coords:
-             box=render.draw_rectangle(x_coord,y_coord,x_coord+box_width,y_coord+box_height,"red")
+             box=render.draw_rectangle(x_coord,y_coord,x_coord+box_width,y_coord+box_height,"grey")
              boxes.append(box)
     return boxes
 
@@ -132,6 +136,27 @@ def print_letters(letter,container):
     print(text_id)
     render.set_text_to_center(text_id,container)
 
+def get_random_index():
+    rand_index=random.randint(0,((GRID_NUMBER*GRID_NUMBER)-1))
+    past_index.append(get_random_index)
+    correct_place=0
+    if rand_index==past_index[-NBACK_NUMBER]:
+        correct_place=1
+    return rand_index,correct_place
+
+def get_random_letter():
+    rand_repeat=random.randint(0,4)
+    random_upper_letter = chr(random.randint(ord('A'), ord('Z')))
+    correct_letter=0
+    if rand_repeat==3 and len(past_letters)>NBACK_NUMBER:
+        letter=past_letters[-NBACK_NUMBER]
+        past_letters.append(letter)
+    else:
+        letter=random_upper_letter
+        past_letters.append(letter)
+    if letter==past_letters[-NBACK_NUMBER]:
+        correct_letter=1
+    return letter,correct_letter
 
 if __name__ == '__main__':
     main()
