@@ -13,6 +13,7 @@ TEXT_B1_STYLE='Arial'
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 screen=None
+started=False
 
 def initialize_pygame():
     pygame.init()
@@ -147,27 +148,35 @@ def find_overlaps(upper_x, upper_y, lower_x, lower_y):
             overlaps.append(obj)
     return overlaps
 
-def button_widget():
+def button_widget(x,y,width,height,text,font_size,margin,default_color,hover_color,pressed_color,radius,on_click,on_click_parameters,):
     button = Button(
         # Mandatory Parameters
         screen,  # Surface to place button on
-        100,  # X-coordinate of top left corner
-        100,  # Y-coordinate of top left corner
-        300,  # Width
-        150,  # Height
+        x,  # X-coordinate of top left corner
+        y,  # Y-coordinate of top left corner
+        width,  # Width
+        height,  # Height
 
         # Optional Parameters
-        text='Hello',  # Text to display
-        fontSize=50,  # Size of font
-        margin=20,  # Minimum distance between text/image and edge of button
-        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(0, 200, 20),  # Colour of button when being clicked
-        radius=20,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: print('Click'),  # Function to call when clicked on
+        text=text,  # Text to display
+        fontSize=font_size,  # Size of font
+        margin=margin,  # Minimum distance between text/image and edge of button
+        inactiveColour=default_color,  # Colour of button when not being interacted with
+        hoverColour=hover_color,  # Colour of button when being hovered over
+        pressedColour=pressed_color,  # Colour of button when being clicked
+        radius=radius,  # Radius of border corners (leave empty for not curved)
+        onClick=lambda: on_click(on_click_parameters),  # Function to call when clicked on
         shadowDistance=1
         )
     return button
+
+
+def start_game(args):
+    global started
+    print('Start') 
+    started=True
+
+
 
 # class Button:
 #     def __init__(self, x, y, width, height, color, text, font_size):

@@ -16,6 +16,8 @@ GRID_WIDTH=400
 GRID_GAP=10
 GRID_NUMBER=3
 
+GAME_SPEED=100
+
 #vertical padding values (CANVAS_HEIGHT=CANVAS_BOTTOM_PADDING+CANVAS_TOP_PADDING+MIDDLE_BUFFER+TOOLBOX_HEIGHT+GRID_HEIGHT)
 CANVAS_BOTTOM_PADDING=(CANVAS_HEIGHT-GRID_HEIGHT)*0.05
 CANVAS_TOP_PADDING=(CANVAS_HEIGHT-GRID_HEIGHT)*0.05
@@ -27,6 +29,9 @@ CANVAS_SIDE_PADDING=10
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+BUTTON_DEFAULT=(200, 50, 0)
+BUTTON_HOVER=(150, 0, 0)
+BUTTON_CLICK=(0, 200, 20)
 
 NBACK_NUMBER=1
 
@@ -39,14 +44,27 @@ past_index=[]
 correct_place=0
 correct_letter=0
 #start_button = render.Button(100, 100, 200, 50, (100, 100, 100), "Click me!", 30)
-my_button=render.button_widget()
+args=[]
+start_button=render.button_widget(30,80,440,50,"START",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.start_game,args)
+started=False
+#letter_button=render.button_widget(270,150,200,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.letter_check,args)
+#position_button=render.button_widget()
 
 def main():
     """Main game loop"""
     clock = pygame.time.Clock()
     pygame.display.set_caption("Button Test")
-   
+    next_game_update_time=0
+    letter=None
+    index=0
+    index_flg=0
+    letter_flg=0
     while True:
+        current_time=time.time()
+        game_update=False
+        if current_time>next_game_update_time:
+            next_game_update_time=current_time+(GAME_SPEED/100)
+            game_update=True
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
@@ -55,19 +73,23 @@ def main():
 
         # Clear the screen
         screen.fill(WHITE)
-        my_button.draw()
+        #letter_button.draw()
+        start_button.draw()
+        #position_button.draw()
         widg.update(events)
          
         # Draw your GUI elements here
         Header=render.create_centered_text("N-Back Trainer","header",None,"X")
         boxes=create_grid()
         ######slower event
-        return_index=get_random_index()
-        index=return_index[0]
-        index_flg=return_index[1]
-        return_letter=get_random_letter()
-        letter=return_letter[0]
-        letter_flg=return_letter[1]
+        if render.started:
+            if game_update:
+                return_index=get_random_index()
+                index=return_index[0]
+                index_flg=return_index[1]
+                return_letter=get_random_letter()
+                letter=return_letter[0]
+                letter_flg=return_letter[1]
         Letter=render.create_centered_text(letter,"letter",boxes[index],"Y")
         Position_flg=render.create_text(10,80,f"Position: {index_flg}","button")
         Letter_flg=render.create_text(10,100,f"Letter: {letter_flg}","button")
@@ -91,7 +113,7 @@ def main():
         pygame.display.flip()
 
         # Cap the frame rate
-        clock.tick(1)
+        clock.tick(60)
 
     #render.bind_mouse()
     #render.bind_func_to_window_close(set_running_false)
@@ -107,6 +129,8 @@ def main():
 
     ##render.setup_mainloop()
 
+def start_game():
+    started=True
 
 def set_running_false():
     #says that you're modifying the global variable running when making modifications (must instantiate first)
@@ -182,6 +206,11 @@ def get_random_letter():
             correct_letter=1
     #correct_ls.append(correct_letter)
     return letter,correct_letter
+
+# def letter_check():
+#     if correct_letter==1:
+#         render.draw_rectangle()
+
 
 if __name__ == '__main__':
     main()
