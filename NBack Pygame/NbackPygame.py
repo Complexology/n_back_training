@@ -4,6 +4,8 @@ import math
 import NbackPygameRenderer as render
 import pygame
 import sys
+import pygame_widgets as widg   
+from pygame_widgets.button import Button
 
 #LAYOUT CONSTANTS
 CANVAS_WIDTH = 500
@@ -32,27 +34,44 @@ render.initialize_pygame()
 screen=render.canvas_setup()
 running=True
 past_letters=[]
+correct_ls=[]
 past_index=[]
+correct_place=0
+correct_letter=0
 #start_button = render.Button(100, 100, 200, 50, (100, 100, 100), "Click me!", 30)
+my_button=render.button_widget()
 
 def main():
     """Main game loop"""
     clock = pygame.time.Clock()
     pygame.display.set_caption("Button Test")
-
+   
     while True:
-        for event in pygame.event.get():
+        events = pygame.event.get()
+        for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
         # Clear the screen
         screen.fill(WHITE)
-
+        my_button.draw()
+        widg.update(events)
+         
         # Draw your GUI elements here
         Header=render.create_centered_text("N-Back Trainer","header",None,"X")
         boxes=create_grid()
-        Letter=render.create_centered_text(get_random_letter()[0],"letter",boxes[get_random_index()[0]],"Y")
+        ######slower event
+        return_index=get_random_index()
+        index=return_index[0]
+        index_flg=return_index[1]
+        return_letter=get_random_letter()
+        letter=return_letter[0]
+        letter_flg=return_letter[1]
+        Letter=render.create_centered_text(letter,"letter",boxes[index],"Y")
+        Position_flg=render.create_text(10,80,f"Position: {index_flg}","button")
+        Letter_flg=render.create_text(10,100,f"Letter: {letter_flg}","button")
+        
         #start_button.draw(screen)
 
 
@@ -137,16 +156,20 @@ def print_letters(letter,container):
     render.set_text_to_center(text_id,container)
 
 def get_random_index():
+    global correct_place
     rand_index=random.randint(0,((GRID_NUMBER*GRID_NUMBER)-1))
-    past_index.append(get_random_index)
+    past_index.append(rand_index)
     correct_place=0
-    if rand_index==past_index[-NBACK_NUMBER]:
-        correct_place=1
+    if len(past_index)>(NBACK_NUMBER):
+        if rand_index==past_index[-1*(NBACK_NUMBER+1)]:
+            correct_place=1
     return rand_index,correct_place
 
 def get_random_letter():
-    rand_repeat=random.randint(0,4)
+    global correct_letter
+    rand_repeat=random.randint(0,5)
     random_upper_letter = chr(random.randint(ord('A'), ord('Z')))
+
     correct_letter=0
     if rand_repeat==3 and len(past_letters)>NBACK_NUMBER:
         letter=past_letters[-NBACK_NUMBER]
@@ -154,8 +177,10 @@ def get_random_letter():
     else:
         letter=random_upper_letter
         past_letters.append(letter)
-    if letter==past_letters[-NBACK_NUMBER]:
-        correct_letter=1
+    if len(past_letters)>(NBACK_NUMBER+1):
+        if letter==past_letters[-1*(NBACK_NUMBER+1)]:
+            correct_letter=1
+    #correct_ls.append(correct_letter)
     return letter,correct_letter
 
 if __name__ == '__main__':

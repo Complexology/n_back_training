@@ -1,12 +1,14 @@
 import pygame
+import pygame_widgets as widg
+from pygame_widgets.button import Button
 
 CANVAS_WIDTH = 500
 CANVAS_HEIGHT = 700
-TEXT_H1_SIZE=30
+TEXT_H1_SIZE=80
 TEXT_H1_STYLE='Arial'
 TEXT_L_SIZE=120
 TEXT_L_STYLE='Arial'
-TEXT_B1_SIZE=80
+TEXT_B1_SIZE=30
 TEXT_B1_STYLE='Arial'
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -144,6 +146,28 @@ def find_overlaps(upper_x, upper_y, lower_x, lower_y):
             upper_y <= obj.rect.y <= lower_y):
             overlaps.append(obj)
     return overlaps
+
+def button_widget():
+    button = Button(
+        # Mandatory Parameters
+        screen,  # Surface to place button on
+        100,  # X-coordinate of top left corner
+        100,  # Y-coordinate of top left corner
+        300,  # Width
+        150,  # Height
+
+        # Optional Parameters
+        text='Hello',  # Text to display
+        fontSize=50,  # Size of font
+        margin=20,  # Minimum distance between text/image and edge of button
+        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
+        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
+        pressedColour=(0, 200, 20),  # Colour of button when being clicked
+        radius=20,  # Radius of border corners (leave empty for not curved)
+        onClick=lambda: print('Click'),  # Function to call when clicked on
+        shadowDistance=1
+        )
+    return button
 
 # class Button:
 #     def __init__(self, x, y, width, height, color, text, font_size):
