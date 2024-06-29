@@ -12,6 +12,8 @@ TEXT_L_SIZE=120
 TEXT_L_STYLE='Arial'
 TEXT_B1_SIZE=30
 TEXT_B1_STYLE='Arial'
+TEXT_S1_SIZE=40
+TEXT_S1_STYLE='Arial'
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 CORRECT=(0, 200, 20)
@@ -50,11 +52,12 @@ def create_text(x, y, words, type):
     screen.blit(text_surface, (x, y))
     return text_surface
 
-def create_centered_text(words, type,container,axis):
+def create_centered_text(words, type,container,axis,y):
     font_to_use = get_font(type)
     text_surface = font_to_use.render(words, True, BLACK)
     text_rect=text_surface.get_rect()
     if container is None:
+        text_rect.move_ip(0, y)
         text_rect.centerx = screen.get_rect().centerx
         screen.blit(text_surface, text_rect)
     else:
@@ -74,6 +77,8 @@ def get_font(type):
         return pygame.font.SysFont(TEXT_L_STYLE, TEXT_L_SIZE)
     elif type == 'button':
         return pygame.font.SysFont(TEXT_B1_STYLE, TEXT_B1_SIZE)
+    elif type == 'score':
+        return pygame.font.SysFont(TEXT_S1_STYLE, TEXT_S1_SIZE)
     else:
         return pygame.font.SysFont("Arial", 30)
     
@@ -110,12 +115,15 @@ def start_game(args):
     print('Start') 
     started=True
 
-def letter_check(correct_letter_flg):
+def letter_check(args):
     global correct_letter_answer
+    correct_letter_flg = args[0]
+    IncrementScoreCallback = args[1]
     #if len(correct_letter_flg)==0:
         #return
     if correct_letter_flg==1:
         correct_letter_answer=True
+        IncrementScoreCallback()
         #draw_rectangle(250,140,480,200,CORRECT)
         #print("correct")
     elif correct_letter_flg==0:
@@ -124,14 +132,17 @@ def letter_check(correct_letter_flg):
         #print("incorrect")
     #else:
         #print("no val")
-    print(correct_position_answer,correct_letter_flg)
+    print(correct_letter_answer,correct_letter_flg)
 
-def position_check(correct_position_flg):
+def position_check(args):
     global correct_position_answer
+    correct_position_flg = args[0]
+    IncrementScoreCallback = args[1]
     #if len(correct_position_flg)==0:
         #return
     if correct_position_flg==1:
         correct_position_answer=True
+        IncrementScoreCallback()
         #draw_rectangle(250,140,480,200,CORRECT)
         #print("correct")
     elif correct_position_flg==0:
@@ -143,8 +154,6 @@ def position_check(correct_position_flg):
     print(correct_position_answer,correct_position_flg)
 
 def check_both(args):
-    print(args)
-    print(args[0])
     if(letter_check(args[0]) and position_check(args[1])):
         print("Both correct")
         return True
