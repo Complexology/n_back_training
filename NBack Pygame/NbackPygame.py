@@ -27,21 +27,22 @@ CANVAS_SIDE_PADDING=10
 ########COLOR CONSTANTS########
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-BUTTON_DEFAULT=(200, 50, 0)
-BUTTON_HOVER=(150, 0, 0)
+BUTTON_DEFAULT=(0, 50, 100)
+BUTTON_HOVER=(0, 0, 150)
 BUTTON_CLICK=(0, 200, 20)
 CORRECT=(0, 200, 20)
 INCORRECT=(200,0,20)
 ##########GAME SETTINGS#########
 NBACK_NUMBER=1
 GAME_SPEED=100
-#########INSTANTIATIONS######
+CORRECT_ANSWER_DELAY=0.5
+#########GLOBAL INSTANTIATIONS######
 # running=True
 past_letters=[]
 # correct_ls=[]
 past_index=[]
-# correct_place=0
-# correct_letter=0
+correct_place=0
+correct_letter=0
 ######SETUP CANVAS & WINDOW#####
 render.initialize_pygame()
 screen=render.canvas_setup()
@@ -57,32 +58,52 @@ screen=render.canvas_setup()
 def main():
     """Main game loop"""
     clock = pygame.time.Clock()
-    ######VARIABLES TO BE RESET EACH LOOP######
+    ######INSTANTIATIONS OUTSIDE LOOP BUT NOT GLOBAL######
     next_game_update_time=0
+    next_correct_answer_time=0
     letter=None
     index=0
-    index_flg=0
+    #correct_place=0
     letter_flg=0
     running=True
     correct_ls=[]
-    correct_place=0
-    correct_letter=0
+    #correct_place=0
+    global correct_letter
+    global correct_place
+    answer_box=None
+    score=0
+
     ######INITIALIZE BUTTONS#######
+
     args=[]
     start_button=render.button_widget(30,80,440,50,"START",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.start_game,args)
     started=False
-    letter_args=[]
-    letter_button=render.button_widget(270,150,200,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.letter_check,letter_args)
+    letter_args=[correct_letter]
+    L_BUTTON_CLICK=get_button_colors()[0]
+    letter_button=render.button_widget(340,150,120,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,L_BUTTON_CLICK,0,render.letter_check,letter_args)
     #position_button=render.button_widget()
-
+    position_args=[correct_place]
+    P_BUTTON_CLICK=get_button_colors()[1]
+    position_button=render.button_widget(40,150,120,50,"POSITION",20,5,BUTTON_DEFAULT,BUTTON_HOVER,P_BUTTON_CLICK,0,render.position_check,position_args)
+    both_args=[correct_letter,correct_place]
+    BOTH_BUTTON_CLICK=get_button_colors()[2]
+    both_button=render.button_widget(190,150,120,50,"BOTH",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.check_both,both_args)
+    
     while True:
 
         ###SETUP TIME FOR NEXT UPDATE AND SET UPDATE FLAG WHEN IT HAS PASSED###
         current_time=time.time()
         game_update=False
+        # answer_indicator_update=False
         if current_time>next_game_update_time:
             next_game_update_time=current_time+(GAME_SPEED/100)
             game_update=True
+            answer_indicator_update=False
+            
+        if current_time>next_correct_answer_time:
+            next_correct_answer_time=current_time+((GAME_SPEED/100)*CORRECT_ANSWER_DELAY)
+            answer_indicator_update=True
+            
 
 
         events = pygame.event.get()
@@ -104,18 +125,29 @@ def main():
             if game_update:
                 return_index=get_random_index()
                 index=return_index[0]
-                index_flg=return_index[1]
+                correct_place=return_index[1]
                 return_letter=get_random_letter()
                 letter=return_letter[0]
                 letter_flg=return_letter[1]
-                letter_args=[correct_letter]
-                letter_button=render.button_widget(270,150,200,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.letter_check,letter_args)
-
+                letter_args=correct_letter
+                L_BUTTON_CLICK=get_button_colors()[0]
+                letter_button=render.button_widget(340,150,120,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,L_BUTTON_CLICK,0,render.letter_check,letter_args)
+                #letter_button=render.button_widget(270,150,200,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.letter_check,letter_args)
+                position_args=correct_place
+                P_BUTTON_CLICK=get_button_colors()[1]
+                position_button=render.button_widget(40,150,120,50,"POSITION",20,5,BUTTON_DEFAULT,BUTTON_HOVER,P_BUTTON_CLICK,0,render.position_check,position_args)
+                BOTH_BUTTON_CLICK=get_button_colors()[2]
+                both_args=[letter_args,position_args]
+                both_button=render.button_widget(190,150,120,50,"BOTH",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.check_both,both_args)
+            
+            #if answer_indicator_update:
+                #indicator_color=render.answer_indicator_color_blink(render.correct_letter_answer)
+                #answer_box=render.draw_rectangle(250,140,480,200,indicator_color)
         ######RENDERED BEFORE GAME STARTED AND AT 60FPS###########
         Letter=render.create_centered_text(letter,"letter",boxes[index],"Y")
-        Position_flg=render.create_text(10,120,f"Position: {index_flg}","button")
-        Letter_flg=render.create_text(10,140,f"Letter: {letter_flg}","button")
-        render.letter_check(letter_args)
+        #Position_flg=render.create_text(10,120,f"Position: {correct_place}","button")
+        #Letter_flg=render.create_text(10,140,f"Letter: {letter_flg}","button")
+        #render.letter_check(letter_args)
         #letter_button.draw()
         #start_button.draw()
         #position_button.draw()    
@@ -198,6 +230,22 @@ def get_random_letter():
     #correct_ls.append(correct_letter)
     return letter,correct_letter
 
+def get_button_colors():
+    global correct_letter
+    global correct_place
+    if correct_letter==1 and correct_place==1:
+        BOTH_BUTTON_CLICK=CORRECT
+    else:
+        BOTH_BUTTON_CLICK=INCORRECT
+    if correct_letter==1:
+        L_BUTTON_CLICK=CORRECT
+    else:
+        L_BUTTON_CLICK=INCORRECT
+    if correct_place==1:
+        P_BUTTON_CLICK=CORRECT
+    else:
+        P_BUTTON_CLICK=INCORRECT
+    return L_BUTTON_CLICK,P_BUTTON_CLICK,BOTH_BUTTON_CLICK
 
 
 if __name__ == '__main__':

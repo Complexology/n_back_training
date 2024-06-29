@@ -1,6 +1,8 @@
 import pygame
 import pygame_widgets as widg
 from pygame_widgets.button import Button
+import time 
+import math
 
 CANVAS_WIDTH = 500
 CANVAS_HEIGHT = 700
@@ -16,6 +18,9 @@ CORRECT=(0, 200, 20)
 INCORRECT=(200,0,20)
 screen=None
 started=False
+correct_letter_answer=None
+correct_position_answer=None
+pulse_speed=0.2
 ####ACTUALLY USED IN NBACK#####
 def initialize_pygame():
     pygame.init()
@@ -105,17 +110,68 @@ def start_game(args):
     print('Start') 
     started=True
 
-def letter_check(correct_letter):
-    if len(correct_letter)==0:
-        return
-    if correct_letter[0]==1:
-        draw_rectangle(250,140,480,200,CORRECT)
+def letter_check(correct_letter_flg):
+    global correct_letter_answer
+    #if len(correct_letter_flg)==0:
+        #return
+    if correct_letter_flg==1:
+        correct_letter_answer=True
+        #draw_rectangle(250,140,480,200,CORRECT)
         #print("correct")
-    elif correct_letter[0]==0:
-        draw_rectangle(250,140,480,200,INCORRECT)
+    elif correct_letter_flg==0:
+        correct_letter_answer=False
+        #draw_rectangle(250,140,480,200,INCORRECT)
         #print("incorrect")
     #else:
         #print("no val")
+    print(correct_position_answer,correct_letter_flg)
+
+def position_check(correct_position_flg):
+    global correct_position_answer
+    #if len(correct_position_flg)==0:
+        #return
+    if correct_position_flg==1:
+        correct_position_answer=True
+        #draw_rectangle(250,140,480,200,CORRECT)
+        #print("correct")
+    elif correct_position_flg==0:
+        correct_position_answer=False
+        #draw_rectangle(250,140,480,200,INCORRECT)
+        #print("incorrect")
+    #else:
+        #print("no val")
+    print(correct_position_answer,correct_position_flg)
+
+def check_both(args):
+    print(args)
+    print(args[0])
+    if(letter_check(args[0]) and position_check(args[1])):
+        print("Both correct")
+        return True
+    return False
+
+def answer_indicator_color_blink(correct_answer_flag):
+    if correct_answer_flag:
+        # Calculate pulsing color (green)
+        t = pygame.time.get_ticks() * pulse_speed
+        pulse_factor = (math.sin(t) + 1) / 2  # Maps [-1, 1] to [0, 1]
+        box_color = (
+            int(WHITE[0] + (CORRECT[0] - WHITE[0]) * pulse_factor),
+            int(WHITE[1] + (CORRECT[1] - WHITE[1]) * pulse_factor),
+            int(WHITE[2] + (CORRECT[2] - WHITE[2]) * pulse_factor),
+        )
+    else:
+        # Calculate pulsing color (red)
+        t = pygame.time.get_ticks() * pulse_speed
+        pulse_factor = (math.sin(t) + 1) / 2  # Maps [-1, 1] to [0, 1]
+        box_color = (
+            int(WHITE[0] + (INCORRECT[0] - WHITE[0]) * pulse_factor),
+            int(WHITE[1] + (INCORRECT[1] - WHITE[1]) * pulse_factor),
+            int(WHITE[2] + (INCORRECT[2] - WHITE[2]) * pulse_factor),
+        )
+
+    return box_color
+
 
 #####MIGHT BE USEFUL BUT NOT USED######
 
@@ -162,9 +218,6 @@ def set_object_to_center(object, container):
     else:
         object_rect = object.get_rect(center=container.get_rect().center)
         screen.blit(object,object_rect)
-
-def delete_object(obj_to_delete):
-    del obj_to_delete
 
 def update_mouse_coords(event):
     global mouse_x, mouse_y
