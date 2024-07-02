@@ -33,8 +33,8 @@ BUTTON_CLICK=(0, 200, 20)
 CORRECT=(0, 200, 20)
 INCORRECT=(200,0,20)
 ##########GAME SETTINGS#########
-NBACK_NUMBER=1
-GAME_SPEED=100
+NBACK_NUMBER=1 
+GAME_SPEED=150
 CORRECT_ANSWER_DELAY=0.5
 #########GLOBAL INSTANTIATIONS######
 # running=True
@@ -54,6 +54,9 @@ screen=render.canvas_setup()
 # letter_button=render.button_widget(270,150,200,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.letter_check,letter_args)
 #position_button=render.button_widget()
 score=0
+can_score=True
+possible_score=0
+misses=0
 class NBackGame:
 
     ######START MAIN GAME LOOP########
@@ -72,25 +75,26 @@ class NBackGame:
         #correct_place=0
         global correct_letter
         global correct_place
+        global can_score
+        global possible_score
+        global misses
         answer_box=None
-        
-
+        options_image = pygame.image.load('slice1_3.png').convert_alpha()
         ######INITIALIZE BUTTONS#######
 
         args=[]
         start_button=render.button_widget(30,80,440,50,"START",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.start_game,args)
         started=False
-        letter_args=[correct_letter, self.IncrementScore]
+        letter_args=[correct_letter, self.increment_score]
         L_BUTTON_CLICK=self.get_button_colors()[0]
         letter_button=render.button_widget(340,150,120,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,L_BUTTON_CLICK,0,render.letter_check,letter_args)
         #position_button=render.button_widget()
-        position_args=[correct_place, self.IncrementScore]
+        position_args=[correct_place, self.increment_score]
         P_BUTTON_CLICK=self.get_button_colors()[1]
         position_button=render.button_widget(40,150,120,50,"POSITION",20,5,BUTTON_DEFAULT,BUTTON_HOVER,P_BUTTON_CLICK,0,render.position_check,position_args)
         both_args=[letter_args,position_args]
         BOTH_BUTTON_CLICK=self.get_button_colors()[2]
         both_button=render.button_widget(190,150,120,50,"BOTH",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.check_both,both_args)
-        
         while True:
 
             ###SETUP TIME FOR NEXT UPDATE AND SET UPDATE FLAG WHEN IT HAS PASSED###
@@ -113,7 +117,19 @@ class NBackGame:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        if render.started:
+                            position_button=render.button_widget(40,150,120,50,"POSITION",20,5,P_BUTTON_CLICK,BUTTON_HOVER,P_BUTTON_CLICK,0,render.position_check,position_args)
+                            render.position_check(position_args)
+                    elif event.key == pygame.K_RIGHT:
+                        if render.started:
+                            letter_button=render.button_widget(340,150,120,50,"LETTER",20,5,L_BUTTON_CLICK,BUTTON_HOVER,L_BUTTON_CLICK,0,render.letter_check,letter_args)
+                            render.letter_check(letter_args)
+                    elif event.key == pygame.K_DOWN:
+                        if render.started:
+                            both_button=render.button_widget(190,150,120,50,"BOTH",20,5,BOTH_BUTTON_CLICK,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.check_both,both_args)
+                            render.check_both(both_args)
             # Clear the screen
             screen.fill(WHITE)
             
@@ -125,30 +141,32 @@ class NBackGame:
             ######SLOWER EVENT LOOP THAT STARTS WITH SATRT BUTTON CLICK########
             if render.started:
                 if game_update:
+                    can_score=True
                     return_index=self.get_random_index()
                     index=return_index[0]
                     correct_place=return_index[1]
                     return_letter=self.get_random_letter()
                     letter=return_letter[0]
                     letter_flg=return_letter[1]
-                    letter_args=[correct_letter,self.IncrementScore]
+                    letter_args=[correct_letter,self.increment_score,self.increment_misses]
                     L_BUTTON_CLICK=self.get_button_colors()[0]
                     letter_button=render.button_widget(340,150,120,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,L_BUTTON_CLICK,0,render.letter_check,letter_args)
                     #letter_button=render.button_widget(270,150,200,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.letter_check,letter_args)
-                    position_args=[correct_place,self.IncrementScore]
+                    position_args=[correct_place,self.increment_score,self.increment_misses]
                     P_BUTTON_CLICK=self.get_button_colors()[1]
                     position_button=render.button_widget(40,150,120,50,"POSITION",20,5,BUTTON_DEFAULT,BUTTON_HOVER,P_BUTTON_CLICK,0,render.position_check,position_args)
                     BOTH_BUTTON_CLICK=self.get_button_colors()[2]
                     both_args=[letter_args,position_args]
                     print(both_args)
                     both_button=render.button_widget(190,150,120,50,"BOTH",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.check_both,both_args)
-                
+                    self.get_possible_score()
+
                 #if answer_indicator_update:
                     #indicator_color=render.answer_indicator_color_blink(render.correct_letter_answer)
                     #answer_box=render.draw_rectangle(250,140,480,200,indicator_color)
             ######RENDERED BEFORE GAME STARTED AND AT 60FPS###########
             Letter=render.create_centered_text(letter,"letter",boxes[index],"Y",None)
-            Score_text="Score: " + str(score)
+            Score_text="Score: " + str(score) + "/" + str(possible_score) + "    Misses:"+str(misses)
             Score=render.create_centered_text(Score_text,"score",None,"X",220)
             #Position_flg=render.create_text(10,120,f"Position: {correct_place}","button")
             #Letter_flg=render.create_text(10,140,f"Letter: {letter_flg}","button")
@@ -252,13 +270,30 @@ class NBackGame:
             P_BUTTON_CLICK=INCORRECT
         return L_BUTTON_CLICK,P_BUTTON_CLICK,BOTH_BUTTON_CLICK
 
-    def IncrementScore(self):
+    def increment_score(self):
         global score
-        score+=1
+        global can_score
+        if can_score:
+            score+=1
+            can_score=False
         print("Score Incremented. New Score: ",score)
         return score
+    def increment_misses(self):
+        global can_score
+        global misses
+        if can_score:
+            misses+=1
+            can_score=False
+    def get_possible_score(self):
+        global correct_letter
+        global correct_place
+        global possible_score
+        if correct_letter==1:
+            possible_score+=1
+        if correct_place==1:
+            possible_score+=1
 
-
+    
 
 if __name__ == '__main__':
     NBackGame=NBackGame()

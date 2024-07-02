@@ -119,6 +119,7 @@ def letter_check(args):
     global correct_letter_answer
     correct_letter_flg = args[0]
     IncrementScoreCallback = args[1]
+    increment_miss_callback=args[2]
     #if len(correct_letter_flg)==0:
         #return
     if correct_letter_flg==1:
@@ -128,6 +129,7 @@ def letter_check(args):
         #print("correct")
     elif correct_letter_flg==0:
         correct_letter_answer=False
+        increment_miss_callback()
         #draw_rectangle(250,140,480,200,INCORRECT)
         #print("incorrect")
     #else:
@@ -137,16 +139,18 @@ def letter_check(args):
 def position_check(args):
     global correct_position_answer
     correct_position_flg = args[0]
-    IncrementScoreCallback = args[1]
+    increment_score_callback = args[1]
+    increment_miss_callback=args[2]
     #if len(correct_position_flg)==0:
         #return
     if correct_position_flg==1:
         correct_position_answer=True
-        IncrementScoreCallback()
+        increment_score_callback()
         #draw_rectangle(250,140,480,200,CORRECT)
         #print("correct")
     elif correct_position_flg==0:
         correct_position_answer=False
+        increment_miss_callback()
         #draw_rectangle(250,140,480,200,INCORRECT)
         #print("incorrect")
     #else:
