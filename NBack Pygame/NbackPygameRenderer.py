@@ -6,7 +6,7 @@ import math
 
 CANVAS_WIDTH = 500
 CANVAS_HEIGHT = 700
-TEXT_H1_SIZE=80
+TEXT_H1_SIZE=60
 TEXT_H1_STYLE='Arial'
 TEXT_L_SIZE=120
 TEXT_L_STYLE='Arial'
@@ -14,6 +14,8 @@ TEXT_B1_SIZE=30
 TEXT_B1_STYLE='Arial'
 TEXT_S1_SIZE=40
 TEXT_S1_STYLE='Arial'
+TEXT_O1_SIZE=30
+TEXT_O1_STYLE='Arial'
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 CORRECT=(0, 200, 20)
@@ -52,9 +54,9 @@ def create_text(x, y, words, type):
     screen.blit(text_surface, (x, y))
     return text_surface
 
-def create_centered_text(words, type,container,axis,y):
+def create_centered_text(words, type,container,axis,y,color):
     font_to_use = get_font(type)
-    text_surface = font_to_use.render(words, True, BLACK)
+    text_surface = font_to_use.render(words, True, color)
     text_rect=text_surface.get_rect()
     if container is None:
         text_rect.move_ip(0, y)
@@ -79,6 +81,8 @@ def get_font(type):
         return pygame.font.SysFont(TEXT_B1_STYLE, TEXT_B1_SIZE)
     elif type == 'score':
         return pygame.font.SysFont(TEXT_S1_STYLE, TEXT_S1_SIZE)
+    elif type =='options':
+        return pygame.font.SysFont(TEXT_O1_STYLE,TEXT_O1_SIZE)
     else:
         return pygame.font.SysFont("Arial", 30)
     
@@ -110,10 +114,34 @@ def button_widget(x,y,width,height,text,font_size,margin,default_color,hover_col
         )
     return button
 
+def image_button_widget(x,y,width,height,text,font_size,margin,default_color,hover_color,pressed_color,radius,on_click,on_click_parameters,image):
+    button = Button(
+        # Mandatory Parameters
+        screen,  # Surface to place button on
+        x,  # X-coordinate of top left corner
+        y,  # Y-coordinate of top left corner
+        width,  # Width
+        height,  # Height
+
+        # Optional Parameters
+        text=text,  # Text to display
+        fontSize=font_size,  # Size of font
+        margin=margin,  # Minimum distance between text/image and edge of button
+        inactiveColour=default_color,  # Colour of button when not being interacted with
+        hoverColour=hover_color,  # Colour of button when being hovered over
+        pressedColour=pressed_color,  # Colour of button when being clicked
+        radius=radius,  # Radius of border corners (leave empty for not curved)
+        onClick=lambda: on_click(on_click_parameters),  # Function to call when clicked on
+        #shadowDistance=1,
+        image=image
+        )
+    return button
+
+
 def start_game(args):
     global started
     print('Start') 
-    started=True
+    started= not started
 
 def letter_check(args):
     global correct_letter_answer
@@ -134,7 +162,7 @@ def letter_check(args):
         #print("incorrect")
     #else:
         #print("no val")
-    print(correct_letter_answer,correct_letter_flg)
+    #print(correct_letter_answer,correct_letter_flg)
 
 def position_check(args):
     global correct_position_answer
@@ -155,7 +183,7 @@ def position_check(args):
         #print("incorrect")
     #else:
         #print("no val")
-    print(correct_position_answer,correct_position_flg)
+    #print(correct_position_answer,correct_position_flg)
 
 def check_both(args):
     if(letter_check(args[0]) and position_check(args[1])):
@@ -185,7 +213,17 @@ def answer_indicator_color_blink(correct_answer_flag):
 
     return box_color
 
+def view_button_click(args):
+    set_screen=args[0]
+    screen_name=args[1]
+    set_screen(screen_name)
 
+def back_button_click(args):
+    set_screen=args[0]
+    screen_name=args[1]
+    slider=args[2]
+    set_screen(screen_name)
+    slider.hide()
 #####MIGHT BE USEFUL BUT NOT USED######
 
 def obj_move_to(obj_to_move, x, y):
