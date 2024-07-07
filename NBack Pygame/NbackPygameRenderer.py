@@ -141,18 +141,20 @@ def image_button_widget(x,y,width,height,text,font_size,margin,default_color,hov
 def start_game(args):
     global started
     print('Start') 
+    reset_rounds_callback=args[0]
+    reset_rounds_callback()
     started= not started
 
 def letter_check(args):
     global correct_letter_answer
     correct_letter_flg = args[0]
-    IncrementScoreCallback = args[1]
+    increment_score_callback = args[1]
     increment_miss_callback=args[2]
     #if len(correct_letter_flg)==0:
         #return
     if correct_letter_flg==1:
         correct_letter_answer=True
-        IncrementScoreCallback()
+        increment_score_callback()
         #draw_rectangle(250,140,480,200,CORRECT)
         #print("correct")
     elif correct_letter_flg==0:
@@ -187,7 +189,7 @@ def position_check(args):
 
 def check_both(args):
     if(letter_check(args[0]) and position_check(args[1])):
-        print("Both correct")
+        #print("Both correct")
         return True
     return False
 

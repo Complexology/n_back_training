@@ -7,6 +7,7 @@ import sys
 import pygame_widgets as widg   
 from pygame_widgets.button import Button
 from pygame_widgets.slider import Slider
+from pygame_widgets.toggle import Toggle
 
 ####LAYOUT CONSTANTS#####
 CANVAS_WIDTH = 500
@@ -40,6 +41,7 @@ NBACK_NUMBER=1
 GAME_SPEED=150
 CORRECT_ANSWER_DELAY=0.5
 FLASH_DELAY=0.75
+GAME_ROUNDS=4
 #########GLOBAL INSTANTIATIONS######
 # running=True
 past_letters=[]
@@ -59,6 +61,9 @@ view="main"
 score_array=[]
 misses_array=[]
 possible_score_array=[]
+rounds=0
+end_round=0
+set_end_flg=True
 class NBackGame:
 
     ######START MAIN GAME LOOP########
@@ -84,6 +89,10 @@ class NBackGame:
         global NBACK_NUMBER
         global GAME_SPEED
         global FLASH_DELAY
+        global GAME_ROUNDS
+        global rounds
+        global end_round
+        global set_end_flg
         answer_box=None
         options_image = pygame.image.load('slice1_3.png').convert_alpha()
         analytics_image = pygame.image.load('slice3_3.png').convert_alpha()
@@ -95,6 +104,7 @@ class NBackGame:
         p_indicator_color=WHITE
         b_indicator_color=WHITE
         answer_indicator_flg=True
+        extended_answers_flg=True
         ######INITIALIZE BUTTONS#######
 
         # args=[]
@@ -114,11 +124,17 @@ class NBackGame:
         # options_button=render.image_button_widget(30,5,50,50,None,20,5,WHITE,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.options_button_click,options_args,options_image)
         # analytics_args=[letter_args,position_args]
         # analytics_button=render.image_button_widget(420,5,50,50,None,20,5,WHITE,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.check_both,analytics_args,analytics_image)
+        Rounds_slider = Slider(screen, 50, 150, 400, 10, min=1, max=100, step=1, initial=GAME_ROUNDS)
         N_slider = Slider(screen, 50, 200, 400, 10, min=1, max=12, step=1, initial=NBACK_NUMBER)
         Speed_slider = Slider(screen, 50, 250, 400, 10, min=10, max=500, step=10, initial=GAME_SPEED)
         Flash_slider = Slider(screen, 50, 300, 400, 10, min=0, max=1, step=.05, initial=FLASH_DELAY)
-        while True:
+        answer_indicator_toggle = Toggle(screen, 50, 325, 50, 15,startOn=answer_indicator_flg)
+        extended_answer_toggle = Toggle(screen, 50, 360, 50, 15,startOn=answer_indicator_flg)
+        delayed_possible_toggle = Toggle(screen, 50, 395, 50, 15,startOn=answer_indicator_flg)
+        back_args=[self.set_view_name, 'main',N_slider]
+        back_button=render.button_widget(100,10,300,50,"<<<  BACK",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.back_button_click,back_args)
 
+        while True:
             ###SETUP TIME FOR NEXT UPDATE AND SET UPDATE FLAG WHEN IT HAS PASSED###
             current_time=time.time()
             game_update=False
@@ -139,9 +155,10 @@ class NBackGame:
                 # if current_time>next_game_update_time:
                 #     next_letter_flash_time=current_time+((GAME_SPEED/100)*FLASH_DELAY)
                 flash_letter_flg=True
-                # b_button_color=BUTTON_DEFAULT
-                # l_button_color=BUTTON_DEFAULT
-                # p_button_color=BUTTON_DEFAULT
+                if extended_answers_flg==False:
+                    b_button_color=BUTTON_DEFAULT
+                    l_button_color=BUTTON_DEFAULT
+                    p_button_color=BUTTON_DEFAULT
 
             events = pygame.event.get()
             for event in events:
@@ -174,12 +191,17 @@ class NBackGame:
     ################ Draw your GUI elements here- rendered at 30fpm ########################
             if view=='main':
                 #screen.fill(WHITE)
+                Rounds_slider.hide()
                 N_slider.hide()
                 Speed_slider.hide()
                 Flash_slider.hide()
+                back_button.hide()
+                answer_indicator_toggle.hide()
+                extended_answer_toggle.hide()
+                delayed_possible_toggle.hide()
                 Header=render.create_centered_text("N-Back Trainer","header",None,"X",0,BLACK)
                 boxes=self.create_grid()
-                args=[]
+                args=[self.reset_rounds]
                 #started=False
                 if render.started==False:
                     start_button=render.button_widget(30,80,440,50,"START",20,5,START_BUTTON_DEFAULT,BUTTON_HOVER,START_BUTTON_DEFAULT,0,render.start_game,args)
@@ -202,34 +224,51 @@ class NBackGame:
             if view=='options':
                 #screen.fill(WHITE)
                 #N_slider = Slider(screen, 50, 200, 400, 10, min=0, max=12, step=1, initial=NBACK_NUMBER)
+                Rounds_slider.show()
                 N_slider.show()
                 Speed_slider.show()
                 start_button.hide()
                 Flash_slider.show()
+                back_button.show()
+                answer_indicator_toggle.show()
+                extended_answer_toggle.show()
+                delayed_possible_toggle.show()
                 NBACK_NUMBER=N_slider.getValue()
                 GAME_SPEED=Speed_slider.getValue()
                 FLASH_DELAY=Flash_slider.getValue()
+                GAME_ROUNDS=Rounds_slider.getValue()
+                answer_indicator_flg=answer_indicator_toggle.getValue()
+                extended_answers_flg=extended_answer_toggle.getValue()
+                delayed_score=delayed_possible_toggle.getValue()
+                game_text="Game Rounds: " + str(GAME_ROUNDS)
+                game_text_obj=render.create_centered_text(game_text,"options",None,"X",110,BLACK)
                 N_text="N Back: " + str(NBACK_NUMBER)
                 N_text_obj=render.create_centered_text(N_text,"options",None,"X",160,BLACK)
                 speed_text="Speed: " + str(GAME_SPEED/100) +'s'
                 speed_text_obj=render.create_centered_text(speed_text,"options",None,"X",210,BLACK)
                 flash_text="Blink: " + str('%.3f'%((GAME_SPEED/100)*(1-FLASH_DELAY))) +'s'
                 flash_text_obj=render.create_centered_text(flash_text,"options",None,"X",260,BLACK)
-                back_args=[self.set_view_name, 'main',N_slider]
-                back_button=render.button_widget(30,80,440,50,"BACK",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.back_button_click,back_args)
+                answer_text_obj=render.create_centered_text("Answer Indicators","options",None,"X",315,BLACK)
+                extended_answer_text_obj=render.create_centered_text("Extended Answer Period","options",None,"X",345,BLACK)
+                delayed_possible_text_obj=render.create_centered_text("Delayed possible correct","options",None,"X",385,BLACK)
+                # back_args=[self.set_view_name, 'main',N_slider]
+                # back_button=render.button_widget(100,10,300,50,"<<<  BACK",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.back_button_click,back_args)
                 #slider = Slider(screen, 50, 200, 400, 10, min=0, max=99, step=1)
                 position_button.hide()
                 letter_button.hide()
                 both_button.hide()
             if view=='analytics':
                 #screen.fill(WHITE)
-                back_button=render.button_widget(30,80,440,50,"BACK",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.view_button_click,back_args)
+                # back_button=render.button_widget(30,80,440,50,"BACK",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.view_button_click,back_args)
+                back_button.show()
+                start_button.hide()
                 position_button.hide()
                 letter_button.hide()
                 both_button.hide()
     ######SLOWER EVENT LOOP THAT STARTS WITH SATRT BUTTON CLICK########
             if view=='main':
                 if render.started:
+                    #if possible_score<=GAME_ROUNDS:
                     if game_update:
                         can_score=True
                         return_index=self.get_random_index()
@@ -239,41 +278,57 @@ class NBackGame:
                         letter=return_letter[0]
                         letter_flg=return_letter[1]
                         letter_args=[correct_letter,self.increment_score,self.increment_misses]
-                        b_button_color=BUTTON_DEFAULT
-                        l_button_color=BUTTON_DEFAULT
-                        p_button_color=BUTTON_DEFAULT
+                        if extended_answers_flg:
+                            b_button_color=BUTTON_DEFAULT
+                            l_button_color=BUTTON_DEFAULT
+                            p_button_color=BUTTON_DEFAULT
                         L_BUTTON_CLICK=self.get_button_colors()[0]
                         #letter_button=render.button_widget(340,150,120,50,"LETTER",20,5,BUTTON_DEFAULT,BUTTON_HOVER,L_BUTTON_CLICK,0,render.letter_check,letter_args)
                         #position_args=[correct_place,self.increment_score,self.increment_misses]
                         P_BUTTON_CLICK=self.get_button_colors()[1]
                         #position_button=render.button_widget(40,150,120,50,"POSITION",20,5,BUTTON_DEFAULT,BUTTON_HOVER,P_BUTTON_CLICK,0,render.position_check,position_args)
                         BOTH_BUTTON_CLICK=self.get_button_colors()[2]
-                        both_args=[letter_args,position_args]
-                        print(both_args)
-                        both_button=render.button_widget(190,150,120,50,"BOTH",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.check_both,both_args)
+                        #both_args=[letter_args,position_args]
+                        #print(both_args)
+                        #both_button=render.button_widget(190,150,120,50,"BOTH",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.check_both,both_args)
                         self.get_possible_score()
                         self.create_score_arrays()
+                        rounds+=1
+                        print(rounds)
+                        print(possible_score)
                         if answer_indicator_flg:
                             l_indicator_color=L_BUTTON_CLICK
                             b_indicator_color=BOTH_BUTTON_CLICK
                             p_indicator_color=P_BUTTON_CLICK
-                
+                        else:
+                            l_indicator_color=WHITE
+                            b_indicator_color=WHITE
+                            p_indicator_color=WHITE
+                        if possible_score==GAME_ROUNDS and set_end_flg:
+                            end_round=rounds+1
+                            set_end_flg=False
+                        if rounds==end_round:
+                            render.started=False
+            
                     #if answer_indicator_update:
                         #indicator_color=render.answer_indicator_color_blink(render.correct_letter_answer)
                         #answer_box=render.draw_rectangle(250,140,480,200,indicator_color)
         ######RENDERED BEFORE GAME STARTED AND AT 60FPS###########
-                if flash_letter_flg and render.started:
+                if (flash_letter_flg and render.started) or render.started==False:
                     letter_obj=render.create_centered_text(letter,"letter",boxes[index],"Y",None,BOX_COLOR)
                 else:
                     letter_obj=render.create_centered_text(letter,"letter",boxes[index],"Y",None,BLACK)
-                if delayed_score==True and len(possible_score_array)>NBACK_NUMBER:
+                if possible_score==GAME_ROUNDS:
+                    Score_text="N="+ str(NBACK_NUMBER) + "  Score: " + str(score) + "/" + str(possible_score) + "  Misses:"+str(misses)
+                elif delayed_score==True and len(possible_score_array)>NBACK_NUMBER:
                     Score_text="N="+ str(NBACK_NUMBER) + "  Score: " + str(score) + "/" + str(possible_score_array[-2]) + "  Misses:"+str(misses)
                 else:
                     Score_text="N="+ str(NBACK_NUMBER) + "  Score: " + str(score) + "/" + str(possible_score) + "  Misses:"+str(misses)
                 Score=render.create_centered_text(Score_text,"score",None,"X",220,BLACK)
-                l_indicator=render.draw_rectangle(340,200,460,220,l_indicator_color)
-                p_indicator=render.draw_rectangle(40,200,160,220,p_indicator_color)
-                b_indicator=render.draw_rectangle(190,200,310,220,b_indicator_color)
+                if render.started:
+                    l_indicator=render.draw_rectangle(340,200,460,220,l_indicator_color)
+                    p_indicator=render.draw_rectangle(40,200,160,220,p_indicator_color)
+                    b_indicator=render.draw_rectangle(190,200,310,220,b_indicator_color)
                 #Position_flg=render.create_text(10,120,f"Position: {correct_place}","button")
                 #Letter_flg=render.create_text(10,140,f"Letter: {letter_flg}","button")
                 #render.letter_check(letter_args)
@@ -383,8 +438,9 @@ class NBackGame:
         if can_score:
             score+=1
             can_score=False
-        print("Score Incremented. New Score: ",score)
+        #print("Score Incremented. New Score: ",score)
         return score
+    
     def increment_misses(self):
         global can_score
         global misses
@@ -413,12 +469,28 @@ class NBackGame:
         misses_array.append(misses)
         score_array.append(score)
 
-
-
     def set_view_name(self,screen_name):
         global view
         view=screen_name
     
+    def reset_rounds(self):
+        global rounds
+        global possible_score
+        global GAME_ROUNDS
+        global possible_score_array
+        global end_round
+        global set_end_flg
+        global score
+        global misses
+        if rounds==end_round:
+            rounds=0
+            possible_score=0
+            possible_score_array=[]
+            end_round=0
+            set_end_flg=True
+            score=0
+            misses=0
+
 
 if __name__ == '__main__':
     NBackGame=NBackGame()
