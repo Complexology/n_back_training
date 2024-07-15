@@ -8,6 +8,11 @@ import pygame_widgets as widg
 from pygame_widgets.button import Button
 from pygame_widgets.slider import Slider
 from pygame_widgets.toggle import Toggle
+import pygame_chart as pyc
+import os
+from gtts import gTTS
+from playsound import playsound
+import tempfile
 
 ####LAYOUT CONSTANTS#####
 CANVAS_WIDTH = 500
@@ -61,6 +66,7 @@ view="main"
 score_array=[]
 misses_array=[]
 possible_score_array=[]
+rounds_array=[]
 rounds=0
 end_round=0
 set_end_flg=True
@@ -93,10 +99,11 @@ class NBackGame:
         global rounds
         global end_round
         global set_end_flg
+        global rounds_array
         answer_box=None
         options_image = pygame.image.load('slice1_3.png').convert_alpha()
         analytics_image = pygame.image.load('slice3_3.png').convert_alpha()
-        delayed_score=True
+        delayed_score_flg=True
         b_button_color=BUTTON_DEFAULT
         l_button_color=BUTTON_DEFAULT
         p_button_color=BUTTON_DEFAULT
@@ -105,6 +112,16 @@ class NBackGame:
         b_indicator_color=WHITE
         answer_indicator_flg=True
         extended_answers_flg=True
+        voice_on_flg=False
+        letters_on_flg=True
+        #########INITIALIZE SOUNDS########
+        pygame.mixer.init()
+        start_sound=pygame.mixer.Sound("Start.mp3")
+        correct_sound=pygame.mixer.Sound("correct answer.mp3")
+        incorrect_sound=pygame.mixer.Sound("incorrect answer.mp3")
+        button_sound=correct_sound=pygame.mixer.Sound("Button Click.mp3")
+
+
         ######INITIALIZE BUTTONS#######
 
         # args=[]
@@ -126,13 +143,16 @@ class NBackGame:
         # analytics_button=render.image_button_widget(420,5,50,50,None,20,5,WHITE,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.check_both,analytics_args,analytics_image)
         Rounds_slider = Slider(screen, 50, 150, 400, 10, min=1, max=100, step=1, initial=GAME_ROUNDS)
         N_slider = Slider(screen, 50, 200, 400, 10, min=1, max=12, step=1, initial=NBACK_NUMBER)
-        Speed_slider = Slider(screen, 50, 250, 400, 10, min=10, max=500, step=10, initial=GAME_SPEED)
+        Speed_slider = Slider(screen, 50, 250, 400, 10, min=70, max=500, step=10, initial=GAME_SPEED)
         Flash_slider = Slider(screen, 50, 300, 400, 10, min=0, max=1, step=.05, initial=FLASH_DELAY)
         answer_indicator_toggle = Toggle(screen, 50, 325, 50, 15,startOn=answer_indicator_flg)
-        extended_answer_toggle = Toggle(screen, 50, 360, 50, 15,startOn=answer_indicator_flg)
-        delayed_possible_toggle = Toggle(screen, 50, 395, 50, 15,startOn=answer_indicator_flg)
+        extended_answer_toggle = Toggle(screen, 50, 360, 50, 15,startOn=extended_answers_flg)
+        delayed_possible_toggle = Toggle(screen, 50, 395, 50, 15,startOn=delayed_score_flg)
+        voice_toggle = Toggle(screen, 50, 430, 50, 15,startOn=voice_on_flg)
+        letter_toggle=Toggle(screen, 50, 465, 50, 15,startOn=letters_on_flg)
         back_args=[self.set_view_name, 'main',N_slider]
         back_button=render.button_widget(100,10,300,50,"<<<  BACK",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.back_button_click,back_args)
+        figure = pyc.Figure(screen, 30, 100, 425, 325)
 
         while True:
             ###SETUP TIME FOR NEXT UPDATE AND SET UPDATE FLAG WHEN IT HAS PASSED###
@@ -199,6 +219,8 @@ class NBackGame:
                 answer_indicator_toggle.hide()
                 extended_answer_toggle.hide()
                 delayed_possible_toggle.hide()
+                voice_toggle.hide()
+                letter_toggle.hide()
                 Header=render.create_centered_text("N-Back Trainer","header",None,"X",0,BLACK)
                 boxes=self.create_grid()
                 args=[self.reset_rounds]
@@ -230,6 +252,8 @@ class NBackGame:
                 start_button.hide()
                 Flash_slider.show()
                 back_button.show()
+                letter_toggle.show()
+                voice_toggle.show()
                 answer_indicator_toggle.show()
                 extended_answer_toggle.show()
                 delayed_possible_toggle.show()
@@ -239,7 +263,9 @@ class NBackGame:
                 GAME_ROUNDS=Rounds_slider.getValue()
                 answer_indicator_flg=answer_indicator_toggle.getValue()
                 extended_answers_flg=extended_answer_toggle.getValue()
-                delayed_score=delayed_possible_toggle.getValue()
+                delayed_score_flg=delayed_possible_toggle.getValue()
+                letters_on_flg=letter_toggle.getValue()
+                voice_on_flg=voice_toggle.getValue()
                 game_text="Game Rounds: " + str(GAME_ROUNDS)
                 game_text_obj=render.create_centered_text(game_text,"options",None,"X",110,BLACK)
                 N_text="N Back: " + str(NBACK_NUMBER)
@@ -251,6 +277,8 @@ class NBackGame:
                 answer_text_obj=render.create_centered_text("Answer Indicators","options",None,"X",315,BLACK)
                 extended_answer_text_obj=render.create_centered_text("Extended Answer Period","options",None,"X",345,BLACK)
                 delayed_possible_text_obj=render.create_centered_text("Delayed possible correct","options",None,"X",385,BLACK)
+                voice_on_text_obj=render.create_centered_text("Voice on","options",None,"X",425,BLACK)
+                letters_on_text_obj=render.create_centered_text("Letters Displayed","options",None,"X",465,BLACK)
                 # back_args=[self.set_view_name, 'main',N_slider]
                 # back_button=render.button_widget(100,10,300,50,"<<<  BACK",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BUTTON_CLICK,0,render.back_button_click,back_args)
                 #slider = Slider(screen, 50, 200, 400, 10, min=0, max=99, step=1)
@@ -265,6 +293,10 @@ class NBackGame:
                 position_button.hide()
                 letter_button.hide()
                 both_button.hide()
+                figure.line('Score',rounds_array,score_array,'BLACK',line_width=10)
+                figure.line('Misses',rounds_array,misses_array,'RED',line_width=10)
+                figure.line('Possible',rounds_array,possible_score_array,'BLUE',line_width=10)
+                figure.draw()
     ######SLOWER EVENT LOOP THAT STARTS WITH SATRT BUTTON CLICK########
             if view=='main':
                 if render.started:
@@ -278,6 +310,13 @@ class NBackGame:
                         letter=return_letter[0]
                         letter_flg=return_letter[1]
                         letter_args=[correct_letter,self.increment_score,self.increment_misses]
+####Place an if to delete the mp3 before running so it has time to not be in use
+                        if voice_on_flg and set_end_flg:
+                            mp3_file = "C:\\Users\\Lex\\Documents\\Python\\n_back_training\\text.mp3"
+                            if os.path.exists(mp3_file):
+                                pygame.mixer.music.unload()
+                                os.remove("text.mp3")
+                            text_to_speech(letter)
                         if extended_answers_flg:
                             b_button_color=BUTTON_DEFAULT
                             l_button_color=BUTTON_DEFAULT
@@ -293,6 +332,7 @@ class NBackGame:
                         #both_button=render.button_widget(190,150,120,50,"BOTH",20,5,BUTTON_DEFAULT,BUTTON_HOVER,BOTH_BUTTON_CLICK,0,render.check_both,both_args)
                         self.get_possible_score()
                         self.create_score_arrays()
+                        rounds_array.append(rounds)
                         rounds+=1
                         print(rounds)
                         print(possible_score)
@@ -304,7 +344,7 @@ class NBackGame:
                             l_indicator_color=WHITE
                             b_indicator_color=WHITE
                             p_indicator_color=WHITE
-                        if possible_score==GAME_ROUNDS and set_end_flg:
+                        if possible_score>=GAME_ROUNDS and set_end_flg:
                             end_round=rounds+1
                             set_end_flg=False
                         if rounds==end_round:
@@ -314,13 +354,17 @@ class NBackGame:
                         #indicator_color=render.answer_indicator_color_blink(render.correct_letter_answer)
                         #answer_box=render.draw_rectangle(250,140,480,200,indicator_color)
         ######RENDERED BEFORE GAME STARTED AND AT 60FPS###########
-                if (flash_letter_flg and render.started) or render.started==False:
-                    letter_obj=render.create_centered_text(letter,"letter",boxes[index],"Y",None,BOX_COLOR)
+                if letters_on_flg:
+                    if (flash_letter_flg and render.started) or render.started==False:
+                        letter_obj=render.create_centered_text(letter,"letter",boxes[index],"Y",None,BOX_COLOR)
+                    else:
+                        letter_obj=render.create_centered_text(letter,"letter",boxes[index],"Y",None,BLACK)
                 else:
-                    letter_obj=render.create_centered_text(letter,"letter",boxes[index],"Y",None,BLACK)
+                    if (flash_letter_flg==False and render.started):
+                        pygame.draw.rect(screen, BLACK, boxes[index])
                 if possible_score==GAME_ROUNDS:
                     Score_text="N="+ str(NBACK_NUMBER) + "  Score: " + str(score) + "/" + str(possible_score) + "  Misses:"+str(misses)
-                elif delayed_score==True and len(possible_score_array)>NBACK_NUMBER:
+                elif delayed_score_flg==True and len(possible_score_array)>NBACK_NUMBER:
                     Score_text="N="+ str(NBACK_NUMBER) + "  Score: " + str(score) + "/" + str(possible_score_array[-2]) + "  Misses:"+str(misses)
                 else:
                     Score_text="N="+ str(NBACK_NUMBER) + "  Score: " + str(score) + "/" + str(possible_score) + "  Misses:"+str(misses)
@@ -491,6 +535,24 @@ class NBackGame:
             score=0
             misses=0
 
+def text_to_speech(text):
+    language = 'en'
+    speech = gTTS(text=text, lang=language, slow=False)
+    speech.save("text.mp3")
+    pygame.mixer.music.load("text.mp3")
+    pygame.mixer.music.play()
+    #playsound("text.mp3")
+    #while pygame.mixer.music.get_busy():
+    #    pygame.time.Clock().tick(10)
+    #os.remove("text.mp3")
+    #while pygame.mixer.music.get_busy():
+       # pygame.time.Clock().tick(10)
+
+# Unload the music to release the file lock
+    #pygame.mixer.music.unload()
+
+# Now you can delete the file
+    #os.remove("text.mp3")
 
 if __name__ == '__main__':
     NBackGame=NBackGame()

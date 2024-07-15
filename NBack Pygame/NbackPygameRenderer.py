@@ -25,6 +25,14 @@ started=False
 correct_letter_answer=None
 correct_position_answer=None
 pulse_speed=0.2
+
+###########initialize sounds############
+pygame.mixer.init()
+start_sound=pygame.mixer.Sound("Start.mp3")
+correct_sound=pygame.mixer.Sound("correct answer.mp3")
+incorrect_sound=pygame.mixer.Sound("incorrect answer.mp3")
+button_sound=pygame.mixer.Sound("Button Click.mp3")
+
 ####ACTUALLY USED IN NBACK#####
 def initialize_pygame():
     pygame.init()
@@ -144,6 +152,7 @@ def start_game(args):
     reset_rounds_callback=args[0]
     reset_rounds_callback()
     started= not started
+    start_sound.play()
 
 def letter_check(args):
     global correct_letter_answer
@@ -155,11 +164,13 @@ def letter_check(args):
     if correct_letter_flg==1:
         correct_letter_answer=True
         increment_score_callback()
+        correct_sound.play()
         #draw_rectangle(250,140,480,200,CORRECT)
         #print("correct")
     elif correct_letter_flg==0:
         correct_letter_answer=False
         increment_miss_callback()
+        incorrect_sound.play()
         #draw_rectangle(250,140,480,200,INCORRECT)
         #print("incorrect")
     #else:
@@ -176,11 +187,13 @@ def position_check(args):
     if correct_position_flg==1:
         correct_position_answer=True
         increment_score_callback()
+        correct_sound.play()
         #draw_rectangle(250,140,480,200,CORRECT)
         #print("correct")
     elif correct_position_flg==0:
         correct_position_answer=False
         increment_miss_callback()
+        incorrect_sound.play()
         #draw_rectangle(250,140,480,200,INCORRECT)
         #print("incorrect")
     #else:
@@ -219,6 +232,7 @@ def view_button_click(args):
     set_screen=args[0]
     screen_name=args[1]
     set_screen(screen_name)
+    button_sound.play()
 
 def back_button_click(args):
     set_screen=args[0]
@@ -226,6 +240,7 @@ def back_button_click(args):
     slider=args[2]
     set_screen(screen_name)
     slider.hide()
+    button_sound.play()
 #####MIGHT BE USEFUL BUT NOT USED######
 
 def obj_move_to(obj_to_move, x, y):
