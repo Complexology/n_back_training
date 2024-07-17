@@ -298,7 +298,12 @@ class NBackGame:
                 figure.line('Possible',rounds_array,possible_score_array,'BLUE',line_width=10)
                 figure.draw()
                 accuracy=(score/possible_score)
-                flash_text_obj=render.create_centered_text(f"Accuracy:{accuracy:.0%}","options",None,"X",440,BLACK)
+                if accuracy>.50:
+                    displayed_score=(((((((accuracy*100)-50)/50)*.75)+.25)*1000*NBACK_NUMBER)-25*misses)
+                else:
+                    displayed_score=(((((accuracy*100)/50)*.25)*1000*NBACK_NUMBER)-25*misses)
+                Accuracy_text_obj=render.create_centered_text(f"Accuracy:{accuracy:.0%}","options",None,"X",440,BLACK)
+                displayed_score_text_obj=render.create_centered_text(f"Score:{displayed_score:.0f}","options",None,"X",480,BLACK)
     ######SLOWER EVENT LOOP THAT STARTS WITH SATRT BUTTON CLICK########
             if view=='main':
                 if render.started:
