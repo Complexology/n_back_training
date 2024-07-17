@@ -46,7 +46,7 @@ NBACK_NUMBER=1
 GAME_SPEED=150
 CORRECT_ANSWER_DELAY=0.5
 FLASH_DELAY=0.75
-GAME_ROUNDS=4
+GAME_ROUNDS=12
 #########GLOBAL INSTANTIATIONS######
 # running=True
 past_letters=[]
@@ -297,6 +297,8 @@ class NBackGame:
                 figure.line('Misses',rounds_array,misses_array,'RED',line_width=10)
                 figure.line('Possible',rounds_array,possible_score_array,'BLUE',line_width=10)
                 figure.draw()
+                accuracy=(score/possible_score)
+                flash_text_obj=render.create_centered_text(f"Accuracy:{accuracy:.0%}","options",None,"X",440,BLACK)
     ######SLOWER EVENT LOOP THAT STARTS WITH SATRT BUTTON CLICK########
             if view=='main':
                 if render.started:
@@ -476,9 +478,12 @@ class NBackGame:
             P_BUTTON_CLICK=INCORRECT
         return L_BUTTON_CLICK,P_BUTTON_CLICK,BOTH_BUTTON_CLICK
 
-    def increment_score(self):
+    def increment_score(self,both_flg):
         global score
         global can_score
+        if can_score and both_flg:
+            score+=2
+            can_score=False
         if can_score:
             score+=1
             can_score=False

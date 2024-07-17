@@ -159,11 +159,14 @@ def letter_check(args):
     correct_letter_flg = args[0]
     increment_score_callback = args[1]
     increment_miss_callback=args[2]
+    both_flg=False
+    if len(args)==4:
+        both_flg=True
     #if len(correct_letter_flg)==0:
         #return
     if correct_letter_flg==1:
         correct_letter_answer=True
-        increment_score_callback()
+        increment_score_callback(both_flg)
         correct_sound.play()
         #draw_rectangle(250,140,480,200,CORRECT)
         #print("correct")
@@ -182,11 +185,14 @@ def position_check(args):
     correct_position_flg = args[0]
     increment_score_callback = args[1]
     increment_miss_callback=args[2]
+    both_flg=False
+    if len(args)==4:
+        both_flg=True
     #if len(correct_position_flg)==0:
         #return
     if correct_position_flg==1:
         correct_position_answer=True
-        increment_score_callback()
+        increment_score_callback(both_flg)
         correct_sound.play()
         #draw_rectangle(250,140,480,200,CORRECT)
         #print("correct")
@@ -201,7 +207,11 @@ def position_check(args):
     #print(correct_position_answer,correct_position_flg)
 
 def check_both(args):
-    if(letter_check(args[0]) and position_check(args[1])):
+    letter_args=args[0]
+    letter_args.append("both")
+    position_args=args[1]
+    position_args.append("both")
+    if(letter_check(letter_args) and position_check(position_args)):
         #print("Both correct")
         return True
     return False
