@@ -11,8 +11,6 @@ from pygame_widgets.toggle import Toggle
 import pygame_chart as pyc
 import os
 from gtts import gTTS
-from playsound import playsound
-import tempfile
 
 ####LAYOUT CONSTANTS#####
 CANVAS_WIDTH = 500
@@ -302,8 +300,8 @@ class NBackGame:
                     displayed_score=(((((((accuracy*100)-50)/50)*.75)+.25)*1000*NBACK_NUMBER)-25*misses)
                 else:
                     displayed_score=(((((accuracy*100)/50)*.25)*1000*NBACK_NUMBER)-25*misses)
-                Accuracy_text_obj=render.create_centered_text(f"Accuracy:{accuracy:.0%}","options",None,"X",440,BLACK)
-                displayed_score_text_obj=render.create_centered_text(f"Score:{displayed_score:.0f}","options",None,"X",480,BLACK)
+                Accuracy_text_obj=render.create_centered_text(f"Accuracy: {accuracy:.0%}","options",None,"X",440,BLACK)
+                displayed_score_text_obj=render.create_centered_text(f"Score: {displayed_score:.0f}","options",None,"X",480,BLACK)
     ######SLOWER EVENT LOOP THAT STARTS WITH SATRT BUTTON CLICK########
             if view=='main':
                 if render.started:
